@@ -71,41 +71,55 @@ enum CurrencyName: String {
 }
 
 extension Double {
-      var roundTo: Double { (self * 100).rounded() / 100 }
+    var roundTo: Double { (self * 100).rounded() / 100 }
 }
 
 func getRates(_ currency: String) {
     let urlString = "https://www.cbr-xml-daily.ru/daily_json.js"
-    guard let url = URL(string: urlString) else { return }
+    guard let url = URL(string: urlString) else {
+        print ("Нет соединения с интернет")
+        return
+    }
     URLSession.shared.dataTask(with: url) { (data, response, error) in
         guard let data = data else { return }
         guard error == nil else { return }
         if currency == "" {
             do {
                 let information = try JSONDecoder().decode(Information.self, from: data)
-                print("Курсы валют ЦБ РФ на \(information.date)\n")
+                let dateFormatterGet = DateFormatter()
+                dateFormatterGet.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+                let dateFormatterPrint = DateFormatter()
+                dateFormatterPrint.dateFormat = "dd.MM.yyyy"
+                let date: Date? = dateFormatterGet.date(from: information.date)
+                print("Курсы валют ЦБ РФ на \(dateFormatterPrint.string(from: (date!))) года\n")
                 for currency in information.valute.values {
                     let changes = (currency.value - currency.previous).roundTo
-                    print(currency.numCode, currency.charCode, currency.nominal, currency.name, currency.value, "руб.", "(\(changes))")
+                    let sign = changes < 0 ? "▼" : "▲"
+                    print(currency.numCode, currency.charCode, currency.nominal, currency.name, currency.value.roundTo, "₽", "(\(changes) \(sign))")
+                    }
+                } catch let error {
+                    print(error)
                 }
-            } catch let error {
-                print(error)
-            }
-        } else {
-            do {
-                let information = try JSONDecoder().decode(Information.self, from: data)
-                
-                print("Курс ЦБ РФ на \(information.date)\n")
-                if let currencyName = information.valute[currency] {
-                    let changes = (currencyName.value - currencyName.previous).roundTo
-                    print(currencyName.numCode, currencyName.charCode, currencyName.nominal, currencyName.name, currencyName.value.roundTo, "руб.", "(\(changes))")
-                } else {
-                    print("Валюта не найдена")
+            } else {
+                do {
+                    let information = try JSONDecoder().decode(Information.self, from: data)
+                    let dateFormatterGet = DateFormatter()
+                    dateFormatterGet.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+                    let dateFormatterPrint = DateFormatter()
+                    dateFormatterPrint.dateFormat = "dd.MM.yyyy"
+                    let date: Date? = dateFormatterGet.date(from: information.date)
+                    print("Курс ЦБ РФ на \(dateFormatterPrint.string(from: (date!))) года\n")
+                    if let currencyName = information.valute[currency] {
+                        let changes = (currencyName.value - currencyName.previous).roundTo
+                        let sign = changes < 0 ? "▼" : "▲"
+                        print(currencyName.numCode, currencyName.charCode, currencyName.nominal, currencyName.name, currencyName.value.roundTo, "₽", "(\(changes) \(sign))")
+                    } else {
+                        print("Валюта не найдена")
+                    }
+                } catch let error {
+                    print(error)
                 }
-            } catch let error {
-                print(error)
             }
-        }
     }.resume()
 }
 
