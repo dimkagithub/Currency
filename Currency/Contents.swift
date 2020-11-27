@@ -1,6 +1,6 @@
 import UIKit
 
-struct Information: Decodable {
+struct Information: Codable {
     let date, previousDate: String
     let previousURL: String
     let timestamp: String
@@ -15,7 +15,7 @@ struct Information: Decodable {
     }
 }
 
-struct Currency: Decodable {
+struct Currency: Codable {
     let id, numCode, charCode: String
     let nominal: Int
     let name: String
@@ -89,9 +89,13 @@ func getRates(_ currency: String) {
                 let dateFormatterGet = DateFormatter()
                 dateFormatterGet.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
                 let dateFormatterPrint = DateFormatter()
-                dateFormatterPrint.dateFormat = "dd.MM.yyyy"
-                let date: Date? = dateFormatterGet.date(from: information.date)
-                print("Курсы валют ЦБ РФ на \(dateFormatterPrint.string(from: (date!))) года\n")
+                dateFormatterPrint.dateFormat = "dd.MM.yyyy, HH:mm"
+                let date: Date? = dateFormatterGet.date(from: information.timestamp)
+                print("""
+                    Курсы валют ЦБ РФ
+                    Последнее обновление: \(dateFormatterPrint.string(from: (date!)))
+
+                    """)
                 for currency in information.valute.values {
                     let changes = (currency.value - currency.previous).roundTo
                     let sign = changes < 0 ? "▼" : "▲"
@@ -106,9 +110,13 @@ func getRates(_ currency: String) {
                     let dateFormatterGet = DateFormatter()
                     dateFormatterGet.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
                     let dateFormatterPrint = DateFormatter()
-                    dateFormatterPrint.dateFormat = "dd.MM.yyyy"
-                    let date: Date? = dateFormatterGet.date(from: information.date)
-                    print("Курс ЦБ РФ на \(dateFormatterPrint.string(from: (date!))) года\n")
+                    dateFormatterPrint.dateFormat = "dd.MM.yyyy, HH:mm"
+                    let date: Date? = dateFormatterGet.date(from: information.timestamp)
+                    print("""
+                        Курсы валюты ЦБ РФ
+                        Последнее обновление: \(dateFormatterPrint.string(from: (date!)))
+
+                        """)
                     if let currencyName = information.valute[currency] {
                         let changes = (currencyName.value - currencyName.previous).roundTo
                         let sign = changes < 0 ? "▼" : "▲"
